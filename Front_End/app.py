@@ -1,27 +1,33 @@
 import streamlit as st
+import os
 
+# Streamlit configuration
 st.set_page_config(layout="wide")
 
-# Custom CSS to style and center the navigation bar content
-st.markdown(
-    """
-    <style>
-    /* Remove Streamlit default padding and margin */
-    .css-18e3th9 {
-        padding: 0;
-    }
-    .css-1d391kg {
-        padding: 0;
-        margin: 0;
-    }
+# Get the current working directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+plus_icon_path = os.path.join(current_dir, "plus-icon.png")
+search_icon_path = os.path.join(current_dir, "magnifying-glass-icon.png")
 
-    /* Hide Streamlit's default hamburger menu and footer */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+# Define session state for navigation
+if "page" not in st.session_state:
+    st.session_state.page = "home"
+
+# Function to handle navigation
+def navigate_to(page):
+    st.session_state.page = page
+
+# Custom CSS for styling
+st.markdown(
+    f"""
+    <style>
+    /* Hide Streamlit's default elements */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header {{visibility: hidden;}}
 
     /* Navigation Bar Styling */
-    .nav-bar {
+    .nav-bar {{
         position: fixed;
         top: 0;
         left: 0;
@@ -35,41 +41,15 @@ st.markdown(
         border-bottom: 2px solid grey;
         z-index: 1000;
         font-family: Arial, sans-serif;
-    }
+    }}
 
-    /* Logo Styling */
-    .nav-logo {
+    .nav-logo {{
         font-size: 24px;
         font-weight: bold;
-    }
+    }}
 
-    /* Navigation Links */
-    .nav-links {
-        position: absolute;
-        right: 20px;
-    }
-
-    .nav-links a {
-        color: black;
-        text-decoration: none;
-        font-weight: bold;
-        margin: 0 15px;
-    }
-
-    .nav-links a:hover {
-        color: grey;
-    }
-
-    /* Full-width image */
-    .full-width-img {
-        width: 100%;
-        height: calc(100vh - 60px); /* Full height minus the nav bar height */
-        object-fit: cover;
-        margin-top: 60px; /* Push below the nav bar */
-    }
-
-    /* Larger Buttons Below Image */
-    .custom-button {
+    /* Round Buttons Styling */
+    .custom-button {{
         margin-top: 250px;
         width: 250px;
         height: 250px;
@@ -83,24 +63,24 @@ st.markdown(
         display: flex;
         justify-content: center;
         align-items: center;
-    }
+    }}
 
-    .custom-button:hover {
+    .custom-button:hover {{
         transform: scale(1.1);
-    }
+    }}
 
-    .button-container {
+    .button-container {{
         display: flex;
         justify-content: space-around;
         margin-top: 30px;
         margin-bottom: 120px; /* Add white space below */
-    }
+    }}
 
-    .button-icon {
-        width: 100px; /* Adjust the icon size */
+    .button-icon {{
+        width: 100px;
         height: 100px;
         position: absolute;
-    }
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -110,30 +90,50 @@ st.markdown(
 st.markdown(
     """
     <div class="nav-bar">
-        <div class="nav-logo">MANGO</div>
-        <div class="nav-links">
-            <a href="#add">Add</a>
-            <a href="#search">Search</a>
+        <div class="nav-logo">PAPA.IA</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Page rendering logic
+if st.session_state.page == "home":
+    # Full-width image
+    st.image("ModelAIcrop.jpg", use_column_width=True, output_format="auto")
+
+    # HTML buttons with icons
+    st.markdown(
+        f"""
+        <div class="button-container">
+            <form method="post">
+                <button type="submit" name="add" class="custom-button">
+                    <img src="file://{plus_icon_path}" class="button-icon" alt="Add Icon">
+                </button>
+            </form>
+            <form method="post">
+                <button type="submit" name="search" class="custom-button">
+                    <img src="file://{search_icon_path}" class="button-icon" alt="Search Icon">
+                </button>
+            </form>
         </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        """,
+        unsafe_allow_html=True,
+    )
 
-# Full-width image
-st.image("ModelAIcrop.jpg", use_column_width=True, output_format="auto")
+    # Check which button was pressed
+    if "add" in st.query_params:
+        navigate_to("add")
+    elif "search" in st.query_params:
+        navigate_to("search")
 
-# Buttons with icons
-st.markdown(
-    """
-    <div class="button-container">
-        <button class="custom-button">
-            <img src="/static/plus-icon.png" class="button-icon" alt="Add Icon">
-        </button>
-        <button class="custom-button">
-            <img src="/static/magnifying-glass-icon.png" class="button-icon" alt="Search Icon">
-        </button>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+elif st.session_state.page == "add":
+    st.title("Add Page")
+    st.write("This is where users can add new items.")
+    if st.button("Go Back"):
+        navigate_to("home")
+
+elif st.session_state.page == "search":
+    st.title("Search Page")
+    st.write("This is where users can search for items.")
+    if st.button("Go Back"):
+        navigate_to("home")
