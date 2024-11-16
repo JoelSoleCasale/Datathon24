@@ -1,33 +1,27 @@
 import streamlit as st
-import os
 
 st.set_page_config(layout="wide")
 
-# Get the current working directory
-current_dir = os.path.dirname(os.path.abspath(__file__))
-plus_icon_path = os.path.join(current_dir, "plus-icon.png")
-search_icon_path = os.path.join(current_dir, "magnifying-glass-icon.png")
-
 # Custom CSS to style and center the navigation bar content
 st.markdown(
-    f"""
+    """
     <style>
     /* Remove Streamlit default padding and margin */
-    .css-18e3th9 {{
+    .css-18e3th9 {
         padding: 0;
-    }}
-    .css-1d391kg {{
+    }
+    .css-1d391kg {
         padding: 0;
         margin: 0;
-    }}
+    }
 
     /* Hide Streamlit's default hamburger menu and footer */
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
 
     /* Navigation Bar Styling */
-    .nav-bar {{
+    .nav-bar {
         position: fixed;
         top: 0;
         left: 0;
@@ -41,41 +35,41 @@ st.markdown(
         border-bottom: 2px solid grey;
         z-index: 1000;
         font-family: Arial, sans-serif;
-    }}
+    }
 
     /* Logo Styling */
-    .nav-logo {{
+    .nav-logo {
         font-size: 24px;
         font-weight: bold;
-    }}
+    }
 
     /* Navigation Links */
-    .nav-links {{
+    .nav-links {
         position: absolute;
         right: 20px;
-    }}
+    }
 
-    .nav-links a {{
+    .nav-links a {
         color: black;
         text-decoration: none;
         font-weight: bold;
         margin: 0 15px;
-    }}
+    }
 
-    .nav-links a:hover {{
+    .nav-links a:hover {
         color: grey;
-    }}
+    }
 
     /* Full-width image */
-    .full-width-img {{
+    .full-width-img {
         width: 100%;
         height: calc(100vh - 60px); /* Full height minus the nav bar height */
         object-fit: cover;
         margin-top: 60px; /* Push below the nav bar */
-    }}
+    }
 
     /* Larger Buttons Below Image */
-    .custom-button {{
+    .custom-button {
         margin-top: 250px;
         width: 250px;
         height: 250px;
@@ -89,24 +83,24 @@ st.markdown(
         display: flex;
         justify-content: center;
         align-items: center;
-    }}
+    }
 
-    .custom-button:hover {{
+    .custom-button:hover {
         transform: scale(1.1);
-    }}
+    }
 
-    .button-container {{
+    .button-container {
         display: flex;
         justify-content: space-around;
         margin-top: 30px;
         margin-bottom: 120px; /* Add white space below */
-    }}
+    }
 
-    .button-icon {{
+    .button-icon {
         width: 100px; /* Adjust the icon size */
         height: 100px;
         position: absolute;
-    }}
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -131,13 +125,13 @@ st.image("ModelAIcrop.jpg", use_column_width=True, output_format="auto")
 
 # Buttons with icons
 st.markdown(
-    f"""
+    """
     <div class="button-container">
         <button class="custom-button">
-            <img src="file://{plus_icon_path}" class="button-icon" alt="Add Icon">
+            <img src="/static/plus-icon.png" class="button-icon" alt="Add Icon">
         </button>
         <button class="custom-button">
-            <img src="file://{search_icon_path}" class="button-icon" alt="Search Icon">
+            <img src="/static/magnifying-glass-icon.png" class="button-icon" alt="Search Icon">
         </button>
     </div>
     """,
