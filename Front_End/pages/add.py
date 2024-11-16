@@ -108,8 +108,8 @@ st.markdown(
     <div class="nav-bar">
         <div class="nav-logo">PAPA.IA</div>
         <div class="nav-links">
-            <a href="#add">Add</a>
-            <a href="#search">Search</a>
+            <a href="add">Add</a>
+            <a href="search">Search</a>
         </div>
     </div>
     """,
