@@ -38,9 +38,11 @@ st.markdown(
     }}
 
     /* Logo Styling */
-    .nav-logo {{
+    .nav-logo a {{
+        text-decoration: none;
         font-size: 24px;
         font-weight: bold;
+        color: black;
     }}
 
     /* Navigation Links */
@@ -109,7 +111,7 @@ st.markdown(
 st.markdown(
     """
     <div class="nav-bar">
-        <div class="nav-logo">PAPA.IA</div>
+        <div class="nav-logo"><a href="app">PAPA.IA</a></div>
         <div class="nav-links">
             <a href="add">Add</a>
             <a href="search">Search</a>
@@ -119,13 +121,23 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Function to calculate initial values for the table
-def calculate_initial_values(image):
-    # Example of dynamically generated data (can be replaced with actual metadata extraction logic)
+# Function to calculate initial values for the metadata table
+def initialize_metadata_table(image):
+    # Load product data from CSV
     df = pd.read_csv('../data/product_data.csv')
     data = {
         "Parameter": df.columns,
-        "Value": df.iloc[1,:]
+        "Value": df.iloc[1, :]
+    }
+    return pd.DataFrame(data)
+
+# Function to create attributes table for Step 3
+def initialize_attributes_table():
+    # Load product data from CSV
+    df = pd.read_csv('../data/transformed_attribute_data.csv')
+    data = {
+        "Attributes": df.columns,
+        "Values": df.iloc[1, :]
     }
     return pd.DataFrame(data)
 
@@ -161,13 +173,13 @@ if st.session_state["step"] == 1:
         except Exception as e:
             st.error(f"Invalid image file: {e}")
 
-# Step 2: Display interactive table
+# Step 2: Display interactive metadata table
 elif st.session_state["step"] == 2:
     st.write("### Step 2: Check the validity of the metadata")
     st.image(st.session_state["uploaded_image"], use_column_width=True, output_format="auto")
 
     # Generate initial table values
-    df = calculate_initial_values(st.session_state["uploaded_image"])
+    df = initialize_metadata_table(st.session_state["uploaded_image"])
 
     # Configure AgGrid
     gb = GridOptionsBuilder.from_dataframe(df)
@@ -175,7 +187,7 @@ elif st.session_state["step"] == 2:
     grid_options = gb.build()
 
     # Display the interactive table
-    st.write("### Interactive Table")
+    st.write("### Interactive Metadata Table")
     response = AgGrid(
         df,
         gridOptions=grid_options,
@@ -194,19 +206,28 @@ elif st.session_state["step"] == 2:
     if col2.button("Next Step"):
         st.session_state["step"] = 3  # Move to the next step
 
-# Step 3: Display results
+# Step 3: Display interactive attributes table
 elif st.session_state["step"] == 3:
-    st.write("### Step 3: Check the validity of the processed results")
+    st.write("### Step 3: Check the attributes and their values")
     st.image(st.session_state["uploaded_image"], use_column_width=True, output_format="auto")
 
-    st.write("### Processed Results")
-    st.write("Metadata Table:")
-    st.write(st.session_state["metadata"])
+    # Generate the attributes table
+    attributes_df = initialize_attributes_table()
 
-    # Save metadata to a file
-    if st.button("Save Metadata"):
-        st.session_state["metadata"].to_csv("metadata_output.csv", index=False)
-        st.success("Metadata saved successfully!")
+    # Configure AgGrid
+    gb = GridOptionsBuilder.from_dataframe(attributes_df)
+    gb.configure_default_column(editable=True)  # Make all columns editable
+    grid_options = gb.build()
+
+    # Display the interactive table
+    st.write("### Interactive Attributes Table")
+    response = AgGrid(
+        attributes_df,
+        gridOptions=grid_options,
+        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
+        update_mode=GridUpdateMode.MODEL_CHANGED,
+        fit_columns_on_grid_load=True
+    )
 
     # Navigation buttons
     col1, col2 = st.columns(2)
