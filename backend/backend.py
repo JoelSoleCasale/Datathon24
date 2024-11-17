@@ -49,7 +49,7 @@ def predict_categorical(data, variable):
     outputs = model(data)
     _, predicted = torch.max(outputs, 1)
     
-    path_to_encoder = "../models/{cat}_enc_cat.pkl".format(cat
+    path_to_encoder = "../models/{cat}_enc_cat.pkl".format(cat=variable)
     with open(path_to_encoder, 'rb') as f:
         encoder = pkl.load(f)
         
