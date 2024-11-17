@@ -9,7 +9,7 @@ import os
 backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.append(backend_path)
 
-from Back_End import backend
+from backend import backend
 
 # CSS Styling for Coherence
 st.markdown(
@@ -96,6 +96,107 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Allowed values for attributes
+ATTRIBUTE_ALLOWED_VALUES = {
+    "cane_height_type": ["INVALID", "Cuña abotinada", "Alta", "Bloque", "Cuña", "Baja", "Media"],
+    "closure_placement": ["INVALID", "Cierre Delantero", "Sin cierre", "Cuello", "Lateral", "Cierre Hombro", "Cierre Trasero"],
+    "heel_shape_type": [
+        "INVALID", "Kitten", "Plano", "Bloque", "Embudo", "Rectangular", "Plataforma", 
+        "De aguja", "Cuña", "Plataforma plana", "Trompeta", 
+        "Plataforma en la parte delantera"
+    ],
+    "knit_structure": ["INVALID", "Punto fino", "Punto medio", "Punto grueso", "UNKNOWN", "Hecho a mano"],
+    "length_type": [
+        "INVALID", "Crop", "Medio", "Largo", "Standard", "Corto", "Midi", "Mini/Micro", 
+        "Tobillero", "Maxi", "Capri", "Tres Cuartos", "Asimétrico"
+    ],
+    "neck_lapel_type": [
+        "INVALID", "Redondo", "Pico", "Regular", "Caja", "Chimenea", "Perkins", "Capucha", 
+        "Camisero", "Espalda Abierta", "Halter", "Alto/Envolvente", "Solapa", 
+        "Hawaiano/Bowling", "Asimétrico", "Escotado", "Barca", "Mao", "Polo", 
+        "Cruzado", "Babydoll/Peter Pan", "Off Shoulder", "Kimono", "Cisne", 
+        "Palabra Honor", "Peak Lapel", "Button Down", "Shawl", "Panadero", 
+        "Drapeado", "Smoking", "Cutaway", "Waterfall", "Sin solapa"
+    ],
+    "silhouette_type": [
+        "INVALID", "Slim", "Oversize", "Recto", "Regular", "Evase", "Slouchy", "Cargo", 
+        "Parachute", "Jogger", "Tapered", "5 Bolsillos", "Skinny", "Wide leg", 
+        "Paperbag", "Relaxed", "Acampanado/Flare", "Ancho", "Lápiz", 
+        "Acampanado/Bootcut", "Chino", "Push Up", "Palazzo", "Fino", 
+        "Modern slim", "Culotte", "Superslim", "Mom", "Boyfriend", "Halter", 
+        "Loose", "Carrot", "Bandeau", "Sarouel"
+    ],
+    "sleeve_length_type": ["INVALID", "Larga", "Corta", "Sin Manga", "Tirante Ancho", "Tres Cuartos", "Tirante Fino"],
+    "toecap_type": ["INVALID", "Redonda", "Abierta", "Con punta", "Cuadrada"],
+    "waist_type": ["INVALID", "Ajustable/Goma", "High Waist", "Regular Waist", "Low Waist"],
+    "woven_structure": ["INVALID", "Ligero", "Medio", "Pesado", "Elástico"]
+}
+
+METADATA_ALLOWED_VALUES = {
+    "cod_color": [
+        "82", "01", "70", "37", "43", "56", "02", "76", "52", "36", "08", "05", "95", "99", "88", "06", 
+        "91", "41", "TC", "40", "50", "20", "94", "45", "12", "92", "15", "68", "26", "69", "65", "BB", 
+        "TN", "TM", "TG", "35", "85", "78", "79", "07", "81", "TO", "80", "87", "10", "96", "16", "59", 
+        "60", "09", "CO", "30", "83", "32", "90", "46", "49", "54", "03", "OR", "14", "93", "84", "PL", 
+        "77", "CU", "17", "23", "28", "18", "74", "GM", "44", "27", "97", "11", "57", "55", "BL", "39", 
+        "31", "61", "CG", "48", "25", "51", "DC", "TA", "TU", "21", "GC", "53", "72", "38", "47", "DO", 
+        "04", "58", "75", "42", "TS", "33", "34", "19", "DI", "98", "24", "73", "62", "66", "67", "71", 
+        "TL", "89", "13", "63", "64", "86", "TD", "22", "29"
+    ],
+    "des_sex": ["Female", "Male", "Unisex"],
+    "des_age": ["Kids", "Teen", "Adult", "Baby", "Newborn"],
+    "des_line": ["KIDS", "MAN", "WOMAN"],
+    "des_fabric": ["TRICOT", "WOVEN", "CIRCULAR", "JEANS", "LEATHER", "ACCESSORIES", "SYNTHETIC LEATHER"],
+    "des_product_category": [
+        "Tops", "Dresses, jumpsuits and Complete set", "Bottoms", 
+        "Outerwear", "Accesories", "Swim and Intimate"
+    ],
+    "des_product_aggregated_family": [
+        "Sweaters and Cardigans", "Dresses and jumpsuits", "T-shirts", "Jeans", 
+        "Trousers & leggings", "Shirts", "Jackets and Blazers", "Coats and Parkas", 
+        "Tops", "Accessories", "Skirts and shorts"
+    ],
+    "des_product_family": [
+        "Sweater", "Dresses", "T-shirt", "Jeans", "Sweatshirts", "Leggings and joggers", 
+        "Shirt", "Trousers", "Blazers", "Coats", "Jackets", "Poloshirts", "Jumpsuit", 
+        "Cardigans", "Parkas", "Tops", "Footwear", "Skirts", "Shorts", "Puffer coats", 
+        "Outer Vest", "Vest", "Hats, scarves and gloves", "Bodysuits", "Leather jackets", 
+        "Trenchcoats"
+    ],
+    "des_product_type": [
+        "Sweater", "Dress", "T-Shirt", "Jeans", "Sweatshirt", "Joggers", "Blouse", 
+        "Trousers", "Blazer", "Shirt", "Coat", "Jacket", "Poloshirt", "Leggings", 
+        "Jumpsuit", "Cardigan", "Parka", "Top", "Ankle Boots", "Skirt", "Shoes", 
+        "Sandals", "Trainers", "Bermudas", "Puffer coat", "Outer vest", "Shorts", 
+        "Overall", "Pichi", "Vest", "Headband", "Slippers", "Bodysuit", "Leather Jacket", 
+        "Boots", "Romper", "Overshirt", "Trenchcoat", "Beach Shoes", "Clogs", 
+        "Sweater Vest", "Cardigan Vest", "Cape", "Poncho", "Kaftan", "Bolero", 
+        "Jacket (Cazadora)"
+    ],
+    "des_color": [
+        "ROSA LIGHT", "BLANCO", "ROJO", "KHAKI", "VERDE", "NAVY", "OFFWHITE", "GRANATE", 
+        "AZUL", "OLIVA", "BEIGE", "CRUDO", "ANTRACITA", "NEGRO", "FUCSIA", "PIEDRA", 
+        "GRIS CLARO VIGORE", "MENTA", "TEJANO CLARO", "VERDE PASTEL", "CELESTE", 
+        "NARANJA", "GRIS MEDIO VIGORE", "AGUA", "AMARILLO", "GRIS", "MOSTAZA", 
+        "MALVA", "PEACH", "MARINO", "MORADO", "BLUEBLACK", "TEJANO NEGRO", 
+        "TEJANO MEDIO", "TEJANO GRIS", "TOPO", "ROSA", "BURDEOS", "CALDERO", 
+        "ARENA", "ROSA PASTEL", "TEJANO OSCURO", "NUDE", "CORAL", "VAINILLA", 
+        "GRIS OSCURO VIGORE", "OCRE", "PETROLEO", "LAVANDA", "CAMEL", "COBRE", 
+        "MARRON", "ROSA PALO", "CHOCOLATE", "PERLA", "TURQUESA", "BOTELLA", 
+        "INDIGO", "HIELO", "ORO", "LIMA", "CENIZA", "CHICLE", "PLATA", "VINO", 
+        "CUERO", "CARAMELO", "MANDARINA", "TERRACOTA", "CANELA", "FRESA", 
+        "GUNMETAL", "ESMERALDA", "PIMENTON", "ASFALTO", "AMARILLO PASTEL", 
+        "AZUL NOCHE", "TINTA", "BLEACH", "DARK CAZA", "TABACO", "LILA", "COGNAC", 
+        "MUSGO", "SALMON", "PORCELANA", "DIRTY CLARO", "TAUPE", "TEJANO GRIS OSCURO", 
+        "NARANJA PASTEL", "GREEN CAST", "ELECTRICO", "BERMELLON", "CAZA", 
+        "BILLAR", "DIRTY OSCURO", "MARFIL", "PRUSIA", "CEREZA", "MANZANA", 
+        "TEJANO SOFT", "COFFEE", "MISTERIO", "CURRY", "DIRTY", "VISON", "POMELO", 
+        "BLOOD", "VIOLETA", "CIRUELA", "GROSELLA", "ROJO VALENTINO", 
+        "TEJANO GRIS CLARO", "GERANIO", "AMARILLO FLUOR", "PURPURA", "MORA", 
+        "ROSA FLUOR", "TESTA DI MORO", "NARANJA FLUOR", "ALBARICOQUE"
+    ]
+}
+
 # Navigation Bar
 st.markdown(
     """
@@ -112,12 +213,17 @@ st.markdown(
 
 # Functions to initialize tables
 def initialize_metadata_table(image):
+    """
+    Initialize the metadata table with empty values in the 'Values' column.
+    """
     df = pd.read_csv('../data/product_data.csv')
-    return pd.DataFrame({"Metadata": df.columns, "Values": df.iloc[1, :]})
+    # Create an empty 'Values' column
+    return pd.DataFrame({"Metadata": df.columns, "Values": [None] * len(df.columns)})
 
 def initialize_attributes_table(image, metadata):
-    df = backend.predict_attributes(image, metadata)
-    return pd.DataFrame({"Attributes": df.columns, "Values": df.iloc[1, :]})
+    metadf = pd.DataFrame([metadata['Values'].values], columns=metadata['Metadata'].values)
+    df = backend.predict_attributes(Image.open(image), metadf)
+    return pd.DataFrame({"Attributes": df.columns, "Values": df.iloc[0, :]})
 
 # Initialize session state
 if "step" not in st.session_state:
@@ -164,9 +270,13 @@ if st.session_state["step"] == 1:
 # Step 2: Display metadata table
 elif st.session_state["step"] == 2:
     st.write("### Step 2: Check the validity of the metadata")
-    st.image(st.session_state["uploaded_image"], use_column_width=True, output_format="auto")
+    st.image(st.session_state["uploaded_image"], use_column_width=False, output_format="auto")
 
-    df = initialize_metadata_table(st.session_state["uploaded_image"])
+    # Initialize the metadata table
+    if "metadata" not in st.session_state or st.session_state["metadata"] is None:
+        st.session_state["metadata"] = initialize_metadata_table(st.session_state["uploaded_image"])
+
+    df = st.session_state["metadata"]
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_default_column(editable=True)
     grid_options = gb.build()
@@ -179,18 +289,34 @@ elif st.session_state["step"] == 2:
         update_mode=GridUpdateMode.MODEL_CHANGED,
         fit_columns_on_grid_load=True,
     )
+
+    # Update session state with the edited metadata table
     st.session_state["metadata"] = pd.DataFrame(response["data"])
 
     col1, col2 = st.columns(2)
     col1.button("Previous Step", on_click=go_to_step, args=(1,))
-    col2.button("Next Step", on_click=go_to_step, args=(3,))
+    if col2.button("Next Step"):
+        # Show a spinner during the initialization of attributes table
+        with st.spinner("Processing information..."):
+            # Pass null values for empty cells
+            metadata = st.session_state["metadata"].copy()
+            metadata["Values"] = metadata["Values"].apply(lambda x: None if pd.isna(x) or x == "" else x)
+
+            # Initialize attributes table
+            st.session_state["attributes_df"] = initialize_attributes_table(
+                st.session_state["uploaded_image"], metadata
+            )
+        
+        st.session_state["step"] = 3
+        st.experimental_rerun()
 
 # Step 3: Display attributes table
 elif st.session_state["step"] == 3:
     st.write("### Step 3: Check the attributes and their values")
-    st.image(st.session_state["uploaded_image"], use_column_width=True, output_format="auto")
+    st.image(st.session_state["uploaded_image"], use_column_width=False, output_format="auto")
 
-    attributes_df = initialize_attributes_table(st.session_state["uploaded_image"], st.session_state["metadata"])
+    # Load the attributes table from session state
+    attributes_df = st.session_state["attributes_df"]
     gb = GridOptionsBuilder.from_dataframe(attributes_df)
     gb.configure_default_column(editable=True)
     grid_options = gb.build()
@@ -204,6 +330,24 @@ elif st.session_state["step"] == 3:
         fit_columns_on_grid_load=True,
     )
 
+    # Validation for attributes
+    for _, row in pd.DataFrame(response["data"]).iterrows():
+        key, value = row["Attributes"], row["Values"]
+        if key in ATTRIBUTE_ALLOWED_VALUES and value not in ATTRIBUTE_ALLOWED_VALUES[key]:
+            st.error(f"Invalid value '{value}' for attribute '{key}'. Allowed values are: {ATTRIBUTE_ALLOWED_VALUES[key]}")
+
+    # Create a dictionary from both dataframes
+    metadata_dict = dict(zip(st.session_state["metadata"]["Metadata"], st.session_state["metadata"]["Values"]))
+    attributes_dict = dict(zip(st.session_state["attributes_df"]["Attributes"], st.session_state["attributes_df"]["Values"]))
+
+    # Combine both dictionaries
+    combined_dict = {**metadata_dict, **attributes_dict}
+
+    # Create a single-row dataframe
+    result_df = pd.DataFrame([combined_dict])
+
+    # Display the result
+    print(result_df)
     col1, col2 = st.columns(2)
     col1.button("Previous Step", on_click=go_to_step, args=(2,))
     col2.button("Restart", on_click=go_to_step, args=(1,))
