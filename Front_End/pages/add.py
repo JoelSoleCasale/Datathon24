@@ -157,7 +157,7 @@ ATTRIBUTE_ALLOWED_VALUES = {
 
 METADATA_ALLOWED_VALUES = {
     "cod_color": [
-        "82", "01", "70", "37", "43", "56", "02", "76", "52", "36", "08", "05", "95", "99", "88", "06", 
+        None, "82", "01", "70", "37", "43", "56", "02", "76", "52", "36", "08", "05", "95", "99", "88", "06", 
         "91", "41", "TC", "40", "50", "20", "94", "45", "12", "92", "15", "68", "26", "69", "65", "BB", 
         "TN", "TM", "TG", "35", "85", "78", "79", "07", "81", "TO", "80", "87", "10", "96", "16", "59", 
         "60", "09", "CO", "30", "83", "32", "90", "46", "49", "54", "03", "OR", "14", "93", "84", "PL", 
@@ -166,28 +166,28 @@ METADATA_ALLOWED_VALUES = {
         "04", "58", "75", "42", "TS", "33", "34", "19", "DI", "98", "24", "73", "62", "66", "67", "71", 
         "TL", "89", "13", "63", "64", "86", "TD", "22", "29"
     ],
-    "des_sex": ["Female", "Male", "Unisex"],
-    "des_age": ["Kids", "Teen", "Adult", "Baby", "Newborn"],
-    "des_line": ["KIDS", "MAN", "WOMAN"],
-    "des_fabric": ["TRICOT", "WOVEN", "CIRCULAR", "JEANS", "LEATHER", "ACCESSORIES", "SYNTHETIC LEATHER"],
+    "des_sex": [None, "Female", "Male", "Unisex"],
+    "des_age": [None, "Kids", "Teen", "Adult", "Baby", "Newborn"],
+    "des_line": [None, "KIDS", "MAN", "WOMAN"],
+    "des_fabric": [None, "TRICOT", "WOVEN", "CIRCULAR", "JEANS", "LEATHER", "ACCESSORIES", "SYNTHETIC LEATHER"],
     "des_product_category": [
-        "Tops", "Dresses, jumpsuits and Complete set", "Bottoms", 
+        None, "Tops", "Dresses, jumpsuits and Complete set", "Bottoms", 
         "Outerwear", "Accesories", "Swim and Intimate"
     ],
     "des_product_aggregated_family": [
-        "Sweaters and Cardigans", "Dresses and jumpsuits", "T-shirts", "Jeans", 
+        None, "Sweaters and Cardigans", "Dresses and jumpsuits", "T-shirts", "Jeans", 
         "Trousers & leggings", "Shirts", "Jackets and Blazers", "Coats and Parkas", 
         "Tops", "Accessories", "Skirts and shorts"
     ],
     "des_product_family": [
-        "Sweater", "Dresses", "T-shirt", "Jeans", "Sweatshirts", "Leggings and joggers", 
+        None, "Sweater", "Dresses", "T-shirt", "Jeans", "Sweatshirts", "Leggings and joggers", 
         "Shirt", "Trousers", "Blazers", "Coats", "Jackets", "Poloshirts", "Jumpsuit", 
         "Cardigans", "Parkas", "Tops", "Footwear", "Skirts", "Shorts", "Puffer coats", 
         "Outer Vest", "Vest", "Hats, scarves and gloves", "Bodysuits", "Leather jackets", 
         "Trenchcoats"
     ],
     "des_product_type": [
-        "Sweater", "Dress", "T-Shirt", "Jeans", "Sweatshirt", "Joggers", "Blouse", 
+        None, "Sweater", "Dress", "T-Shirt", "Jeans", "Sweatshirt", "Joggers", "Blouse", 
         "Trousers", "Blazer", "Shirt", "Coat", "Jacket", "Poloshirt", "Leggings", 
         "Jumpsuit", "Cardigan", "Parka", "Top", "Ankle Boots", "Skirt", "Shoes", 
         "Sandals", "Trainers", "Bermudas", "Puffer coat", "Outer vest", "Shorts", 
@@ -197,7 +197,7 @@ METADATA_ALLOWED_VALUES = {
         "Jacket (Cazadora)"
     ],
     "des_color": [
-        "ROSA LIGHT", "BLANCO", "ROJO", "KHAKI", "VERDE", "NAVY", "OFFWHITE", "GRANATE", 
+        None, "ROSA LIGHT", "BLANCO", "ROJO", "KHAKI", "VERDE", "NAVY", "OFFWHITE", "GRANATE", 
         "AZUL", "OLIVA", "BEIGE", "CRUDO", "ANTRACITA", "NEGRO", "FUCSIA", "PIEDRA", 
         "GRIS CLARO VIGORE", "MENTA", "TEJANO CLARO", "VERDE PASTEL", "CELESTE", 
         "NARANJA", "GRIS MEDIO VIGORE", "AGUA", "AMARILLO", "GRIS", "MOSTAZA", 
@@ -233,9 +233,9 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
+MAX_DISPLAY_WIDTH=800
 # Functions to initialize tables
-def initialize_metadata_table(image):
+def initialize_metadata_table():
     """
     Initialize the metadata table with empty values in the 'Values' column.
     """
@@ -257,6 +257,30 @@ if "step" not in st.session_state:
 # Handlers for button actions
 def go_to_step(step):
     st.session_state["step"] = step
+    
+def show_image():
+    # Remove the background and display the image
+    if "uploaded_image" in st.session_state and st.session_state["uploaded_image"] is not None:
+        try:
+            # Load the uploaded image
+            uploaded_image = Image.open(st.session_state["uploaded_image"])
+
+            # Apply background removal
+            processed_image = remove_background(uploaded_image)
+
+            # Dynamically adjust the image size for display
+            width, height = processed_image.size
+            if width > MAX_DISPLAY_WIDTH:
+                # Resize to fit the screen width
+                new_height = int(MAX_DISPLAY_WIDTH * height / width)
+                processed_image = processed_image.resize((MAX_DISPLAY_WIDTH, new_height), Image.Resampling.LANCZOS)
+
+            # Display the processed image
+            st.image(processed_image, use_column_width=False, output_format="auto")
+        except Exception as e:
+            st.error(f"Error processing the image: {e}")
+    else:
+        st.error("No image uploaded.")
 
 # Add spacing between steps
 st.divider()
@@ -293,11 +317,12 @@ if st.session_state["step"] == 1:
 # Step 2: Display metadata table
 elif st.session_state["step"] == 2:
     st.write("### Step 2: Check the validity of the metadata")
-    st.image(st.session_state["uploaded_image"], use_column_width=False, output_format="auto")
+
+    show_image()
 
     # Initialize the metadata table
     if "metadata" not in st.session_state or st.session_state["metadata"] is None:
-        st.session_state["metadata"] = initialize_metadata_table(st.session_state["uploaded_image"])
+        st.session_state["metadata"] = initialize_metadata_table()
 
     df = st.session_state["metadata"]
     gb = GridOptionsBuilder.from_dataframe(df)
@@ -316,22 +341,36 @@ elif st.session_state["step"] == 2:
     # Update session state with the edited metadata table
     st.session_state["metadata"] = pd.DataFrame(response["data"])
 
-    col1, col2 = st.columns(2)
-    col1.button("Previous Step", on_click=go_to_step, args=(1,))
-    if col2.button("Next Step"):
-        # Show a spinner during the initialization of attributes table
-        with st.spinner("Processing information..."):
-            # Pass null values for empty cells
-            metadata = st.session_state["metadata"].copy()
-            metadata["Values"] = metadata["Values"].apply(lambda x: None if pd.isna(x) or x == "" else x)
+    # Validate metadata values
+    validation_errors = []
+    for _, row in st.session_state["metadata"].iterrows():
+        field = row["Metadata"]
+        value = row["Values"]
 
-            # Initialize attributes table
-            st.session_state["attributes_df"] = initialize_attributes_table(
-                st.session_state["uploaded_image"], metadata
-            )
-        
-        st.session_state["step"] = 3
-        st.experimental_rerun()
+        if field in METADATA_ALLOWED_VALUES and value not in METADATA_ALLOWED_VALUES[field]:
+            validation_errors.append(f"Invalid value '{value}' for '{field}'. Allowed: {METADATA_ALLOWED_VALUES[field]}")
+
+    # Display validation errors
+    if validation_errors:
+        st.error("Some metadata values are invalid. Please correct the following errors:")
+        for error in validation_errors:
+            st.write(f"- {error}")
+    else:
+        col1, col2 = st.columns(2)
+        col1.button("Previous Step", on_click=go_to_step, args=(1,))
+        if col2.button("Next Step"):
+            with st.spinner("Processing information..."):
+                # Pass null values for empty cells
+                metadata = st.session_state["metadata"].copy()
+                metadata["Values"] = metadata["Values"].apply(lambda x: None if pd.isna(x) or x == "" else x)
+
+                # Initialize attributes table
+                st.session_state["attributes_df"] = initialize_attributes_table(
+                    st.session_state["uploaded_image"], metadata
+                )
+
+            st.session_state["step"] = 3
+            st.experimental_rerun()
 
 # Step 3: Display attributes table
 elif st.session_state["step"] == 3:
@@ -340,8 +379,7 @@ elif st.session_state["step"] == 3:
     import string
 
     st.write("### Step 3: Check the attributes and their values")
-    st.image(st.session_state["uploaded_image"], use_column_width=False, output_format="auto")
-
+    show_image()
     # Load the attributes table from session state
     attributes_df = st.session_state["attributes_df"]
     gb = GridOptionsBuilder.from_dataframe(attributes_df)
@@ -370,7 +408,7 @@ elif st.session_state["step"] == 3:
         combined_dict = {**metadata_dict, **attributes_dict}
 
         # Ensure 'cod_modelo_color' is not null and unique in the dataset
-        dataset_path = 'imageDB/merged/dataset.csv'
+        dataset_path = 'imageDB/merged_dataset.csv'
         if os.path.exists(dataset_path):
             existing_df = pd.read_csv(dataset_path)
             existing_cod_modelo_colors = set(existing_df['cod_modelo_color'])

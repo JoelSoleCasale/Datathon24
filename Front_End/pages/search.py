@@ -115,7 +115,6 @@ DATA_PATH = '../Front_End/imageDB/merged_dataset.csv'
 IMAGE_DIR = '../../datathon-fme-mango/archive/images/images'
 
 # Load data
-@st.cache_data
 def load_data():
     return pd.read_csv(DATA_PATH)
 
