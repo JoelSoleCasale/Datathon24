@@ -4,6 +4,29 @@ import pandas as pd
 from PIL import Image
 import sys
 import os
+from rembg import remove
+import io
+
+# Function to remove the background and set it to white
+def remove_background(image: Image.Image) -> Image.Image:
+    # Convert PIL image to bytes
+    img_bytes = io.BytesIO()
+    image.save(img_bytes, format='PNG')
+    img_bytes = img_bytes.getvalue()
+
+    # Use rembg to remove the background
+    no_bg_bytes = remove(img_bytes)
+
+    # Convert the result back to a PIL Image
+    no_bg_image = Image.open(io.BytesIO(no_bg_bytes)).convert("RGBA")
+
+    # Create a white background
+    white_bg = Image.new("RGBA", no_bg_image.size, (255, 255, 255, 255))
+
+    # Composite the no-background image over the white background
+    final_image = Image.alpha_composite(white_bg, no_bg_image).convert("RGB")
+
+    return final_image
 
 # Add the ../Back_End directory to the Python path
 backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
@@ -222,7 +245,7 @@ def initialize_metadata_table(image):
 
 def initialize_attributes_table(image, metadata):
     metadf = pd.DataFrame([metadata['Values'].values], columns=metadata['Metadata'].values)
-    df = backend.predict_attributes(Image.open(image), metadf)
+    df = backend.predict_attributes(remove_background(Image.open(image)), metadf)
     return pd.DataFrame({"Attributes": df.columns, "Values": df.iloc[0, :]})
 
 # Initialize session state
@@ -312,6 +335,10 @@ elif st.session_state["step"] == 2:
 
 # Step 3: Display attributes table
 elif st.session_state["step"] == 3:
+    import os
+    import random
+    import string
+
     st.write("### Step 3: Check the attributes and their values")
     st.image(st.session_state["uploaded_image"], use_column_width=False, output_format="auto")
 
@@ -330,24 +357,58 @@ elif st.session_state["step"] == 3:
         fit_columns_on_grid_load=True,
     )
 
-    # Validation for attributes
-    for _, row in pd.DataFrame(response["data"]).iterrows():
-        key, value = row["Attributes"], row["Values"]
-        if key in ATTRIBUTE_ALLOWED_VALUES and value not in ATTRIBUTE_ALLOWED_VALUES[key]:
-            st.error(f"Invalid value '{value}' for attribute '{key}'. Allowed values are: {ATTRIBUTE_ALLOWED_VALUES[key]}")
+    # Update session state with the edited attributes table
+    st.session_state["attributes_df"] = pd.DataFrame(response["data"])
 
-    # Create a dictionary from both dataframes
-    metadata_dict = dict(zip(st.session_state["metadata"]["Metadata"], st.session_state["metadata"]["Values"]))
-    attributes_dict = dict(zip(st.session_state["attributes_df"]["Attributes"], st.session_state["attributes_df"]["Values"]))
+    # Add a "Submit" button
+    if st.button("Submit"):
+        # Create a dictionary from both dataframes
+        metadata_dict = dict(zip(st.session_state["metadata"]["Metadata"], st.session_state["metadata"]["Values"]))
+        attributes_dict = dict(zip(st.session_state["attributes_df"]["Attributes"], st.session_state["attributes_df"]["Values"]))
 
-    # Combine both dictionaries
-    combined_dict = {**metadata_dict, **attributes_dict}
+        # Combine both dictionaries
+        combined_dict = {**metadata_dict, **attributes_dict}
 
-    # Create a single-row dataframe
-    result_df = pd.DataFrame([combined_dict])
+        # Ensure 'cod_modelo_color' is not null and unique in the dataset
+        dataset_path = 'imageDB/merged/dataset.csv'
+        if os.path.exists(dataset_path):
+            existing_df = pd.read_csv(dataset_path)
+            existing_cod_modelo_colors = set(existing_df['cod_modelo_color'])
+        else:
+            existing_cod_modelo_colors = set()
 
-    # Display the result
-    print(result_df)
+        if not combined_dict['cod_modelo_color']:
+            while True:
+                new_cod_modelo_color = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+                if new_cod_modelo_color not in existing_cod_modelo_colors:
+                    combined_dict['cod_modelo_color'] = new_cod_modelo_color
+                    break
+
+        # Ensure 'des_filename' has a valid value
+        if not combined_dict['des_filename']:
+            file_extension = os.path.splitext(st.session_state["uploaded_image"].name)[-1] or '.jpg'
+            combined_dict['des_filename'] = ''.join(random.choices(string.ascii_lowercase + string.digits, k=15)) + file_extension
+
+        # Create a single-row dataframe
+        result_df = pd.DataFrame([combined_dict])
+
+        # Append the result_df to the CSV file
+        os.makedirs(os.path.dirname(dataset_path), exist_ok=True)
+        if os.path.exists(dataset_path):
+            result_df.to_csv(dataset_path, mode='a', header=False, index=False)
+        else:
+            result_df.to_csv(dataset_path, index=False)
+
+        # Save the image with the name in 'des_filename'
+        save_dir = '../../datathon-fme-mango/archive/images/images'
+        os.makedirs(save_dir, exist_ok=True)
+        image_path = os.path.join(save_dir, combined_dict['des_filename'])
+        with open(image_path, "wb") as f:
+            f.write(st.session_state["uploaded_image"].getbuffer())
+
+        st.success(f"Data successfully saved. Image saved as '{combined_dict['des_filename']}'.")
+
+    # Navigation buttons
     col1, col2 = st.columns(2)
     col1.button("Previous Step", on_click=go_to_step, args=(2,))
     col2.button("Restart", on_click=go_to_step, args=(1,))

@@ -1,10 +1,29 @@
 import pandas as pd
 from fashion_clip.fashion_clip import FashionCLIP
 import pickle as pkl
-from net import Net
 import torch
+from torch import nn
 
 import os
+
+class Net(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(Net, self).__init__()
+        self.fc1 = nn.Linear(input_size, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, output_size)
+
+        # dropout
+        self.dropout = nn.Dropout(0.2)
+
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = torch.relu(self.fc2(x))
+        x = self.dropout(x)
+        x = self.fc3(x)
+        return x
 
 fclip = FashionCLIP('fashion-clip')
 
@@ -48,7 +67,9 @@ def predict_categorical(data, variable):
     }
     
     model = Net(512, attri_to_size[variable])
-    model.load_state_dict(torch.load("../models/{cat}_classifier.pt".format(cat=variable)))
+    # Determine the device: Use GPU if available, else fall back to CPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.load_state_dict(torch.load("../models/{cat}_classifier.pt".format(cat=variable), device))
     model.eval()
     
     data = torch.tensor(data.values, dtype=torch.float32)
@@ -82,19 +103,18 @@ def predict(data, metadata):
     ]
     
     categories = {}
-    
+    useful_metadata_cols = ["des_product_family", "des_line", "des_fabric"]
     for var in categorical_variables:
-        validity = validate_categorical(pd.concat([data, metadata], axis=1), var)
+        validity = validate_categorical(pd.concat([data, metadata[useful_metadata_cols]], axis=1), var)
         
         if validity == "VALID":
             categories[var] = predict_categorical(data, var)
         else:
             categories[var] = validity
             
-    return categories
+    return pd.DataFrame([categories])
 
 def predict_attributes(image, metadata):
-    
     embeddings = get_embeddings(image)
     
     data = pd.DataFrame(embeddings)
