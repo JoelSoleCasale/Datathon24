@@ -2,6 +2,14 @@ import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder, DataReturnMode, GridUpdateMode
 import pandas as pd
 from PIL import Image
+import sys
+import os
+
+# Add the ../Back_End directory to the Python path
+backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.append(backend_path)
+
+from Back_End import backend
 
 # CSS Styling for Coherence
 st.markdown(
@@ -107,8 +115,8 @@ def initialize_metadata_table(image):
     df = pd.read_csv('../data/product_data.csv')
     return pd.DataFrame({"Metadata": df.columns, "Values": df.iloc[1, :]})
 
-def initialize_attributes_table():
-    df = pd.read_csv('../data/transformed_attribute_data.csv')
+def initialize_attributes_table(image, metadata):
+    df = backend.predict_attributes(image, metadata)
     return pd.DataFrame({"Attributes": df.columns, "Values": df.iloc[1, :]})
 
 # Initialize session state
@@ -182,7 +190,7 @@ elif st.session_state["step"] == 3:
     st.write("### Step 3: Check the attributes and their values")
     st.image(st.session_state["uploaded_image"], use_column_width=True, output_format="auto")
 
-    attributes_df = initialize_attributes_table()
+    attributes_df = initialize_attributes_table(st.session_state["uploaded_image"], st.session_state["metadata"])
     gb = GridOptionsBuilder.from_dataframe(attributes_df)
     gb.configure_default_column(editable=True)
     grid_options = gb.build()
