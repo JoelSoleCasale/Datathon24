@@ -3,25 +3,27 @@ from st_aggrid import AgGrid, GridOptionsBuilder, DataReturnMode, GridUpdateMode
 import pandas as pd
 from PIL import Image
 
+# CSS Styling for Coherence
 st.markdown(
-    f"""
+    """
     <style>
+    /* General App Styling */
+    body {
+        font-family: Arial, sans-serif;
+        color: #333;
+    }
+
     /* Remove Streamlit default padding and margin */
-    .css-18e3th9 {{
-        padding: 0;
-    }}
-    .css-1d391kg {{
-        padding: 0;
-        margin: 0;
-    }}
+    .css-18e3th9 { padding: 0; }
+    .css-1d391kg { padding: 0; margin: 0; }
 
     /* Hide Streamlit's default hamburger menu and footer */
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
+    #MainMenu { visibility: hidden; }
+    footer { visibility: hidden; }
+    header { visibility: hidden; }
 
     /* Navigation Bar Styling */
-    .nav-bar {{
+    .nav-bar {
         position: fixed;
         top: 0;
         left: 0;
@@ -35,79 +37,58 @@ st.markdown(
         border-bottom: 2px solid grey;
         z-index: 1000;
         font-family: Arial, sans-serif;
-    }}
-
-    /* Logo Styling */
-    .nav-logo a {{
+    }
+    .nav-logo a {
         text-decoration: none;
         font-size: 24px;
         font-weight: bold;
         color: black;
-    }}
-
-    /* Navigation Links */
-    .nav-links {{
+    }
+    .nav-links {
         position: absolute;
         right: 20px;
-    }}
-
-    .nav-links a {{
+    }
+    .nav-links a {
         color: black;
         text-decoration: none;
         font-weight: bold;
         margin: 0 15px;
-    }}
+    }
+    .nav-links a:hover { color: grey; }
 
-    .nav-links a:hover {{
-        color: grey;
-    }}
+    /* Section Headers */
+    h1, h2, h3 {
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        color: #333;
+    }
 
-    /* Full-width image */
-    .full-width-img {{
-        width: 100%;
-        height: calc(100vh - 60px); /* Full height minus the nav bar height */
-        object-fit: cover;
-        margin-top: 60px; /* Push below the nav bar */
-    }}
-
-    /* Larger Buttons Below Image */
-    .custom-button {{
-        margin-top: 250px;
-        width: 250px;
-        height: 250px;
-        border-radius: 50%;
+    /* Button Styling */
+    button {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        color: white;
         background-color: grey;
         border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
         cursor: pointer;
-        outline: none;
-        transition: transform 0.2s ease;
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }}
+    }
+    button:hover {
+        background-color: #555;
+    }
 
-    .custom-button:hover {{
-        transform: scale(1.1);
-    }}
-
-    .button-container {{
-        display: flex;
-        justify-content: space-around;
-        margin-top: 30px;
-        margin-bottom: 120px; /* Add white space below */
-    }}
-
-    .button-icon {{
-        width: 100px; /* Adjust the icon size */
-        height: 100px;
-        position: absolute;
-    }}
+    /* AgGrid Table Styling */
+    .ag-theme-streamlit {
+        font-family: Arial, sans-serif;
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+# Navigation Bar
 st.markdown(
     """
     <div class="nav-bar">
@@ -121,33 +102,26 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Function to calculate initial values for the metadata table
+# Functions to initialize tables
 def initialize_metadata_table(image):
-    # Load product data from CSV
     df = pd.read_csv('../data/product_data.csv')
-    data = {
-        "Parameter": df.columns,
-        "Value": df.iloc[1, :]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Metadata": df.columns, "Values": df.iloc[1, :]})
 
-# Function to create attributes table for Step 3
 def initialize_attributes_table():
-    # Load product data from CSV
     df = pd.read_csv('../data/transformed_attribute_data.csv')
-    data = {
-        "Attributes": df.columns,
-        "Values": df.iloc[1, :]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Attributes": df.columns, "Values": df.iloc[1, :]})
 
 # Initialize session state
 if "step" not in st.session_state:
-    st.session_state["step"] = 1  # Tracks the current step
+    st.session_state["step"] = 1
     st.session_state["uploaded_image"] = None
     st.session_state["metadata"] = None
 
-# Add some spacing between steps
+# Handlers for button actions
+def go_to_step(step):
+    st.session_state["step"] = step
+
+# Add spacing between steps
 st.divider()
 
 # Step 1: Upload an image
@@ -155,85 +129,73 @@ if st.session_state["step"] == 1:
     st.write("### Step 1: Upload your image")
     st.image("pages/greenJ_model.jpg", use_column_width=True, output_format="auto")
 
+    # File uploader inside a form
     with st.form(key="form1"):
         img = st.file_uploader(
             label="Upload a picture of the article to analyze it:", type=["jpg", "jpeg", "png"]
         )
         submit_image_button = st.form_submit_button(label="Submit image")
 
-    if submit_image_button and img:
-        try:
-            # Validate the image file with Pillow
-            image = Image.open(img)
-            image.verify()  # Raise an exception if the file is invalid
+    # Handle image upload and validation
+    if submit_image_button:
+        if img:
+            try:
+                # Validate the image file with Pillow
+                image = Image.open(img)
+                image.verify()  # Raise an exception if the file is invalid
 
-            # Save the validated image in session state
-            st.session_state["uploaded_image"] = img
-            st.session_state["step"] = 2  # Move to the next step
-        except Exception as e:
-            st.error(f"Invalid image file: {e}")
+                # Save the validated image in session state
+                st.session_state["uploaded_image"] = img
+                st.session_state["step"] = 2  # Move to the next step
+                st.experimental_rerun()  # Force a rerun to reflect the updated step immediately
+            except Exception as e:
+                st.error(f"Invalid image file: {e}")
+        else:
+            st.error("Please upload an image before submitting.")
 
-# Step 2: Display interactive metadata table
+# Step 2: Display metadata table
 elif st.session_state["step"] == 2:
     st.write("### Step 2: Check the validity of the metadata")
     st.image(st.session_state["uploaded_image"], use_column_width=True, output_format="auto")
 
-    # Generate initial table values
     df = initialize_metadata_table(st.session_state["uploaded_image"])
-
-    # Configure AgGrid
     gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_default_column(editable=True)  # Make all columns editable
+    gb.configure_default_column(editable=True)
     grid_options = gb.build()
 
-    # Display the interactive table
     st.write("### Interactive Metadata Table")
     response = AgGrid(
         df,
         gridOptions=grid_options,
         data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
         update_mode=GridUpdateMode.MODEL_CHANGED,
-        fit_columns_on_grid_load=True
+        fit_columns_on_grid_load=True,
     )
-
-    # Get the updated data
     st.session_state["metadata"] = pd.DataFrame(response["data"])
 
-    # Navigation buttons
     col1, col2 = st.columns(2)
-    if col1.button("Previous Step"):
-        st.session_state["step"] = max(1, st.session_state["step"] - 1)
-    if col2.button("Next Step"):
-        st.session_state["step"] = 3  # Move to the next step
+    col1.button("Previous Step", on_click=go_to_step, args=(1,))
+    col2.button("Next Step", on_click=go_to_step, args=(3,))
 
-# Step 3: Display interactive attributes table
+# Step 3: Display attributes table
 elif st.session_state["step"] == 3:
     st.write("### Step 3: Check the attributes and their values")
     st.image(st.session_state["uploaded_image"], use_column_width=True, output_format="auto")
 
-    # Generate the attributes table
     attributes_df = initialize_attributes_table()
-
-    # Configure AgGrid
     gb = GridOptionsBuilder.from_dataframe(attributes_df)
-    gb.configure_default_column(editable=True)  # Make all columns editable
+    gb.configure_default_column(editable=True)
     grid_options = gb.build()
 
-    # Display the interactive table
     st.write("### Interactive Attributes Table")
     response = AgGrid(
         attributes_df,
         gridOptions=grid_options,
         data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
         update_mode=GridUpdateMode.MODEL_CHANGED,
-        fit_columns_on_grid_load=True
+        fit_columns_on_grid_load=True,
     )
 
-    # Navigation buttons
     col1, col2 = st.columns(2)
-    if col1.button("Previous Step"):
-        st.session_state["step"] = max(1, st.session_state["step"] - 1)
-    if col2.button("Restart"):
-        st.session_state["step"] = 1
-        st.session_state["uploaded_image"] = None
-        st.session_state["metadata"] = None
+    col1.button("Previous Step", on_click=go_to_step, args=(2,))
+    col2.button("Restart", on_click=go_to_step, args=(1,))
