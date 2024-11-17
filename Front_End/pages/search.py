@@ -126,21 +126,6 @@ def load_image(filename):
         return Image.open(filepath)
     return None
 
-# JavaScript to scroll to the top of the page
-def scroll_to_top():
-    st.components.v1.html(
-        """
-        <script>
-            document.querySelector("button[aria-label='Next']").addEventListener("click", function() {
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            });
-            document.querySelector("button[aria-label='Previous']").addEventListener("click", function() {
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            });
-        </script>
-        """,
-        height=0,
-    )
 
 # Streamlit App
 st.title("Product Search Engine")
@@ -226,6 +211,3 @@ with col3:
         st.session_state.current_page += 1
 with col2:
     st.write(f"Page {st.session_state.current_page} of {total_pages}")
-
-# Scroll to top
-scroll_to_top()
