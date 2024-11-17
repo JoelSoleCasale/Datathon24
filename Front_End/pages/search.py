@@ -5,25 +5,25 @@ from PIL import Image
 
 st.set_page_config(layout="wide")
 
+# Global Styling for Uniformity
 st.markdown(
-    f"""
+    """
     <style>
-    /* Remove Streamlit default padding and margin */
-    .css-18e3th9 {{
-        padding: 0;
-    }}
-    .css-1d391kg {{
+    /* General Styling */
+    body {
+        font-family: Arial, sans-serif;
+        color: #333;
+    }
+    .css-18e3th9, .css-1d391kg {
         padding: 0;
         margin: 0;
-    }}
-
-    /* Hide Streamlit's default hamburger menu and footer */
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
+    }
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
 
     /* Navigation Bar Styling */
-    .nav-bar {{
+    .nav-bar {
         position: fixed;
         top: 0;
         left: 0;
@@ -36,47 +36,67 @@ st.markdown(
         align-items: center;
         border-bottom: 2px solid grey;
         z-index: 1000;
-        font-family: Arial, sans-serif;
-    }}
-
-    /* Logo Styling */
-    .nav-logo a {{
+    }
+    .nav-logo a {
         text-decoration: none;
         font-size: 24px;
         font-weight: bold;
         color: black;
-    }}
-
-    /* Navigation Links */
-    .nav-links {{
+    }
+    .nav-links {
         position: absolute;
         right: 20px;
-    }}
-
-    .nav-links a {{
+    }
+    .nav-links a {
         color: black;
         text-decoration: none;
         font-weight: bold;
         margin: 0 15px;
-    }}
+    }
+    .nav-links a:hover { color: grey; }
 
-    .nav-links a:hover {{
-        color: grey;
-    }}
+    /* Pagination Button Styling */
+    button {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        color: white;
+        background-color: grey;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #555;
+    }
 
-    /* Full-width image */
-    .full-width-img {{
-        width: 100%;
-        height: calc(100vh - 60px); /* Full height minus the nav bar height */
-        object-fit: cover;
-        margin-top: 60px; /* Push below the nav bar */
-    }}
-
+    /* Product Display Styling */
+    .product-card {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    .product-title {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .product-details {
+        font-size: 14px;
+    }
+    .product-image {
+        display: block;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+# Navigation Bar
 st.markdown(
     """
     <div class="nav-bar">
@@ -90,18 +110,16 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 # Define paths
-DATA_PATH = '../Front_End/imageDB/merged_dataset.csv'  # Replace with the path to your CSV file
-IMAGE_DIR = '../../datathon-fme-mango/archive/images/images'  # Replace with the directory containing images
+DATA_PATH = '../Front_End/imageDB/merged_dataset.csv'
+IMAGE_DIR = '../../datathon-fme-mango/archive/images/images'
 
-# Load the data
+# Load data
 @st.cache_data
 def load_data():
-    df = pd.read_csv(DATA_PATH)
-    return df
+    return pd.read_csv(DATA_PATH)
 
-# Function to load an image
+# Load an image
 def load_image(filename):
     filepath = os.path.join(IMAGE_DIR, filename)
     if os.path.exists(filepath):
@@ -125,91 +143,89 @@ def scroll_to_top():
     )
 
 # Streamlit App
-st.title("Product Search Engine with Pagination")
+st.title("Product Search Engine")
+st.write("Search for products by keywords or apply filters from the sidebar.")
 
 # Load dataset
 data = load_data()
 
-# Search term input
-search_term = st.text_input("Search for a product (e.g., color, category, etc.):")
-
-# Filter attributes
-st.sidebar.title("Filter Options")
-sex_filter = st.sidebar.selectbox("Filter by Gender:", ["All"] + data['des_sex'].dropna().unique().tolist())
-age_filter = st.sidebar.selectbox("Filter by Age:", ["All"] + data['des_age'].dropna().unique().tolist())
-category_filter = st.sidebar.selectbox("Filter by Product Category:", ["All"] + data['des_product_category'].dropna().unique().tolist())
+# Sidebar filters
+st.sidebar.title("Filter Products")
+sex_filter = st.sidebar.selectbox("Gender", ["All"] + data['des_sex'].dropna().unique().tolist())
+age_filter = st.sidebar.selectbox("Age", ["All"] + data['des_age'].dropna().unique().tolist())
+category_filter = st.sidebar.selectbox("Category", ["All"] + data['des_product_category'].dropna().unique().tolist())
+rows_per_page = st.sidebar.slider("Results per Page", 5, 50, 10)
 
 # Filter data based on user input
-filtered_data = data
-
+filtered_data = data.copy()
 if sex_filter != "All":
     filtered_data = filtered_data[filtered_data['des_sex'] == sex_filter]
-
 if age_filter != "All":
     filtered_data = filtered_data[filtered_data['des_age'] == age_filter]
-
 if category_filter != "All":
     filtered_data = filtered_data[filtered_data['des_product_category'] == category_filter]
 
+search_term = st.text_input("Search Products", placeholder="Enter keywords like color, category...")
 if search_term:
-    # Search term filtering across all columns
     filtered_data = filtered_data[
-        filtered_data.apply(
-            lambda row: row.astype(str).str.contains(search_term, case=False).any(),
-            axis=1
-        )
+        filtered_data.apply(lambda row: row.astype(str).str.contains(search_term, case=False).any(), axis=1)
     ]
 
 # Pagination
-rows_per_page = st.sidebar.number_input("Results per page:", min_value=1, max_value=50, value=10)
 total_results = len(filtered_data)
 total_pages = (total_results - 1) // rows_per_page + 1
-
-# Current page
 if "current_page" not in st.session_state:
     st.session_state.current_page = 1
-
-# Paginate the data
 start_row = (st.session_state.current_page - 1) * rows_per_page
 end_row = start_row + rows_per_page
 paginated_data = filtered_data.iloc[start_row:end_row]
 
 # Display results
-st.write(f"Showing results {start_row + 1} to {min(end_row, total_results)} of {total_results}:")
+st.write(f"Showing {start_row + 1} to {min(end_row, total_results)} of {total_results} results.")
 for _, row in paginated_data.iterrows():
-    # Display product information
-    st.subheader(f"Product ID: {row['cod_modelo_color']}")
-    st.write(f"**Category:** {row['des_product_category']}")
-    st.write(f"**Color:** {row['des_color']}")
-    st.write(f"**Gender:** {row['des_sex']}")
-    st.write(f"**Age:** {row['des_age']}")
+    with st.container():
+        # Display product information
+        st.markdown(
+            f"""
+            <div class="product-card">
+                <div class="product-title"><strong>Product ID:</strong> {row['cod_modelo_color']}</div>
+                <div class="product-details">
+                    <strong>Category:</strong> {row['des_product_category']}<br>
+                    <strong>Color:</strong> {row['des_color']}<br>
+                    <strong>Gender:</strong> {row['des_sex']}<br>
+                    <strong>Age:</strong> {row['des_age']}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-    # Load and display the image
-    image_filename = f"{row['des_filename']}"
-    image = load_image(image_filename)
-    if image:
-        st.image(image, caption=image_filename, use_column_width=False, width=200)  # Adjust width as needed
-    else:
-        st.write(f"Image not found for `{image_filename}`.")
+        # Retrieve all associated image filenames for the product
+        product_images = row['des_filename'].split(';')  # Assuming filenames are stored as a semicolon-separated string
+        
+        # Display images side by side while keeping their original size
+        image_columns = st.columns(len(product_images))
+        for col, image_filename in zip(image_columns, product_images):
+            image = load_image(image_filename)
+            if image:
+                with col:
+                    st.image(image, caption=image_filename, use_column_width=False, width=200)  # Fixed width for uniformity
+            else:
+                with col:
+                    st.write(f"Image not found for `{image_filename}`.")
     st.markdown("---")
 
-# Footer
-st.write("Use the sidebar to filter products or the search box to find specific items.")
 
 # Pagination controls
 col1, col2, col3 = st.columns([1, 2, 1])
-
 with col1:
-    if st.button("Previous", key = "previous") and st.session_state.current_page > 1:
+    if st.button("Previous") and st.session_state.current_page > 1:
         st.session_state.current_page -= 1
-
 with col3:
-    if st.button("Next", key = "next") and st.session_state.current_page < total_pages:
+    if st.button("Next") and st.session_state.current_page < total_pages:
         st.session_state.current_page += 1
-
-# Display current page number
 with col2:
     st.write(f"Page {st.session_state.current_page} of {total_pages}")
 
-    # Add scroll-to-top functionality
+# Scroll to top
 scroll_to_top()
